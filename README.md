@@ -1,3 +1,29 @@
+### LuCI Web界面应用插件
+#### 核心LuCI组件：
+luci - LuCI Web界面核心 \
+luci-base - LuCI基础组件 \
+luci-compat - LuCI兼容性组件 \
+luci-light - LuCI轻量版 \
+luci-mod-admin-full - 完整管理模块 \
+luci-mod-network - 网络管理模块 \
+luci-mod-status - 状态监控模块 \
+luci-mod-system - 系统管理模块
+#### LuCI应用插件：
+luci-app-autoreboot - 自动重启插件 \
+luci-app-dockerman - Docker管理界面 \
+luci-app-filetransfer - 文件传输插件 \
+luci-app-firewall - 防火墙管理 \
+luci-app-openclash - OpenClash代理插件 \
+luci-app-openlist - OpenList代理插件 \
+luci-app-opkg - 软件包管理 \
+luci-app-ttyd - 终端Web界面 \
+luci-app-turboacc - 网络加速插件 \
+luci-app-upnp - UPnP端口映射 \
+luci-app-wol - 网络唤醒插件
+#### LuCI主题：
+luci-theme-argon - Argon主题 \
+luci-theme-bootstrap - Bootstrap主题
+
 # 自动编译lede的OpenWrt
 [![LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat&logo=github&label=LICENSE)](https://github.com/LeeHe-gif/AutoBuild-OpenWrt/blob/master/LICENSE)
 ![GitHub Stars](https://img.shields.io/github/stars/LeeHe-gif/AutoBuild-OpenWrt.svg?style=flat&logo=appveyor&label=Stars&logo=github)
