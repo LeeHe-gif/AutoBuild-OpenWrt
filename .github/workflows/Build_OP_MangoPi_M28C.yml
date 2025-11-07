@@ -46,6 +46,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@master
 
+    - name: Show hardware info
+      run: |
+        chmod 755 ./scripts/show_hardware_info.sh
+        ./scripts/show_hardware_info.sh
+        
     - name: Free disk space
       uses: jlumbroso/free-disk-space@main
       with:
@@ -113,7 +118,7 @@ jobs:
         else
             CONFIG_FILE="config/MangoPi_M28C-modem.config" 
         fi
-        chmod +x ./customize.sh && ./customize.sh
+        chmod +x ./scripts/customize.sh && ./scripts/customize.sh
         [[ -d "files" ]] && mv -f files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
         cd openwrt

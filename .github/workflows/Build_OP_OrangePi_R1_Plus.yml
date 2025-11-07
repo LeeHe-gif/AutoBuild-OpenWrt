@@ -12,16 +12,21 @@ on:
         options:
           - true
           - false
-          
+
+      repo:
+        description: "chose the repo"
+        required: false
+        default: "lede"
+        type: boolean
+        options:
+          - openwrt
+          - lede
 env:
-  REPO_URL: https://github.com/coolsnowwolf/lede
-  CONFIG_FILE: 'config/Xunlong_OrangePi_R1_Plus.config'
-  REPO_BRANCH: master
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
-  
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -29,6 +34,18 @@ jobs:
     steps:
     - name: Checkout
       uses: actions/checkout@v3
+    
+    - name: Free disk space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+          
+    - name: Show hardware info
+      run: |
+        chmod 755 ./scripts/show_hardware_info.sh
+        ./scripts/show_hardware_info.sh
 
     - name: Initialize environment
       id: init
@@ -44,13 +61,23 @@ jobs:
       id: clone
       if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
-        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
-        git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
-        cd openwrt
-        echo 'src-git Qmodem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
-        echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
-        echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
-        echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
+        if [[ "${{ inputs.repo }}" == "lede" ]]; then
+            REPO_URL = "https://github.com/coolsnowwolf/lede"
+            REPO_BRANCH = "master"
+            CONFIG_FILE = "config/Xunlong_OrangePi_R1_Plus.config"
+            git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+            git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
+            cd openwrt
+            echo 'src-git Qmodem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
+            echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
+            echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
+            echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
+        else
+            REPO_URL = "https://github.com/openwrt/openwrt"
+            REPO_BRANCH  "openwrt-23.05"
+            CONFIG_FILE = "config/Xunlong_OrangePi_R1_Plus_1.config"
+            git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        fi
         echo "status=success" >> ${GITHUB_OUTPUT}
 
     - name: Setup disk space
@@ -67,9 +94,11 @@ jobs:
       if: steps.clone.outputs.status == 'success'
       run: |
         ./scripts/feeds update -a
-        rm -rf feeds/luci/applications/luci-app-openclash
-        cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
-        ./scripts/feeds install -a -f
+        if [[ "${{ inputs.repo }}" == "lede" ]]; then
+            rm -rf feeds/luci/applications/luci-app-openclash
+            cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
+        fi
+        ./scripts/feeds install -a
 
     - name: Configuration Customization
       run: |
@@ -77,7 +106,6 @@ jobs:
           echo "❌ Error: Config file ${CONFIG_FILE} not found!"
           exit 1
         fi
-        chmod +x ./customize.sh && ./customize.sh
         [[ -d "files" ]] && mv -f files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
         cd openwrt && make defconfig

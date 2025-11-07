@@ -15,7 +15,7 @@ on:
           
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
-  CONFIG_FILE: "config/HILINK_H29K.config"  # 修改为config目录
+  CONFIG_FILE: "config/HILINK_H29K.config" 
   REPO_BRANCH: master
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
@@ -28,8 +28,13 @@ jobs:
 
     steps:
     - name: Checkout
-      uses: actions/checkout@v3  # 更新到最新版本
+      uses: actions/checkout@v3
 
+    - name: Show hardware info
+      run: |
+        chmod 755 ./scripts/show_hardware_info.sh
+        ./scripts/show_hardware_info.sh
+        
     - name: Free disk space
       uses: jlumbroso/free-disk-space@main
       with:
@@ -79,7 +84,7 @@ jobs:
           exit 1
         fi
         
-        chmod +x ./customize.sh && ./customize.sh
+        chmod +x ./scripts/customize.sh && ./scripts/customize.sh
         [[ -d "files" ]] && mv -f files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
         cd openwrt && make defconfig

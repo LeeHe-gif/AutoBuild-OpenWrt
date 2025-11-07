@@ -27,26 +27,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 检出代码
+    - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 1
 
-    - name: 清理磁盘空间
+    - name: Show hardware info
+      run: |
+        chmod 755 ./scripts/show_hardware_info.sh
+        ./scripts/show_hardware_info.sh
+        
+    - name: Free disk space
       uses: jlumbroso/free-disk-space@main
       with:
         tool-cache: false
         android: true
         dotnet: true
 
-    - name: 初始化环境
+    - name: Initialization environment
       run: |
         sudo -E apt-get -y update
         sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/LeeHe-gif/depend_ubuntu2204_openwrt/main/depend_ubuntu2204_openwrt)
         sudo timedatectl set-timezone "${TZ}"
         echo "status=success" >> ${GITHUB_OUTPUT}
 
-    - name: 克隆源码
+    - name: Clone source code
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         cd openwrt
@@ -56,14 +61,14 @@ jobs:
         echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
         echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
 
-    - name: 配置缓存目录
+    - name: set up dl dir
       run: |
         sudo mkdir -p -m 777 /mnt/openwrt/{dl,staging_dir,build_dir}
         ln -sfn /mnt/openwrt/dl openwrt/dl
         ln -sfn /mnt/openwrt/staging_dir openwrt/staging_dir
         ln -sfn /mnt/openwrt/build_dir openwrt/build_dir
         
-    - name: 更新安装 feeds
+    - name: Update & Install feeds
       working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
@@ -71,20 +76,20 @@ jobs:
         ./scripts/feeds install -a
         ./scripts/feeds install -a -f -p modem
 
-    - name: 自定义配置
+    - name: Configuration Customization
       run: |
-        chmod +x ./customize.sh && ./customize.sh
+        chmod +x ./scripts/customize.sh && ./scripts/customize.sh
         [[ -d "files" ]] && cp -r files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
         cd openwrt && make defconfig
         
-    - name: 下载软件包
+    - name: Download package
       run: |
         cd openwrt/
         make download -j$(nproc) || { echo "::error::下载失败"; exit 1; }
         find dl -size -1024c -delete
 
-    - name: 编译固件
+    - name: Compile the OpenWrt
       id : compile
       run: |
         cd openwrt/
@@ -98,7 +103,7 @@ jobs:
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
         echo "status=success" >> ${GITHUB_OUTPUT}
 
-    - name: 整理固件文件
+    - name: Organize files
       id: organize
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       run: |
@@ -114,7 +119,7 @@ jobs:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}/*
 
-    - name: 准备发布信息
+    - name: Generate release tag
       id : release
       if : steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true'
       run: |
@@ -128,7 +133,7 @@ jobs:
         特性: 包含OpenClash，qmodem，istore等插件
         EOF
 
-    - name: 创建发布版本
+    - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
       if: steps.organize.outputs.status == 'success' && !cancelled()
       env:
@@ -138,7 +143,7 @@ jobs:
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
 
-    - name: 清理旧工作流
+    - name: Delete workflow runs
       if: always()
       uses: LeeHe-gif/delete-workflow-runs@main
       with:

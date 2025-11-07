@@ -27,59 +27,64 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 检出代码
+    - name: Checkout
       uses: actions/checkout@v3
 
-    - name: 清理磁盘空间
+    - name: Show hardware info
+      run: |
+        chmod 755 ./scripts/show_hardware_info.sh
+        ./scripts/show_hardware_info.sh
+        
+    - name: Free disk space
       uses: jlumbroso/free-disk-space@main
       with:
         tool-cache: false
         android: true
         dotnet: true
 
-    - name: 初始化环境
+    - name: Initialization environment
       run: |
         sudo -E apt-get -y update
         sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/LeeHe-gif/depend_ubuntu2204_openwrt/main/depend_ubuntu2204_openwrt)
         sudo timedatectl set-timezone "${TZ}"
         echo "status=success" >> ${GITHUB_OUTPUT}
 
-    - name: 克隆源码
+    - name: Clone source code
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         cd openwrt/package
         git clone https://github.com/jerrykuku/luci-theme-argon.git
         git clone https://github.com/sirpdboy/luci-app-eqosplus
 
-    - name: 配置缓存目录
+    - name: setup dl dir
       run: |
         sudo mkdir -p -m 777 /mnt/openwrt/{dl,staging_dir,build_dir}
         ln -sfn /mnt/openwrt/dl openwrt/dl
         ln -sfn /mnt/openwrt/staging_dir openwrt/staging_dir
         ln -sfn /mnt/openwrt/build_dir openwrt/build_dir
         
-    - name: 更新安装 feeds
+    - name: feedsUpdate & Install feeds
       working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
         ./scripts/feeds install -a
 
-    - name: 自定义配置
+    - name: Configuration Customization
       run: |
-        chmod +x ./op-customize.sh && ./op-customize.sh
+        chmod +x ./scripts/op-customize.sh && ./scripts/op-customize.sh
         [[ -d "files" ]] && cp -r files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
         rm -f openwrt/feeds/luci/libs/rpcd-mod-luci/src/luci.c
         cp -v patches/luci.c openwrt/feeds/luci/libs/rpcd-mod-luci/src/luci.c
         cd openwrt && make defconfig
 
-    - name: 下载软件包
+    - name: Download package
       run: |
         cd openwrt/
         make download -j$(nproc) || { echo "::error::下载失败"; exit 1; }
         find dl -size -1024c -delete
 
-    - name: 编译固件
+    - name: Compile the OpenWrt
       id : compile
       run: |
         cd openwrt/
@@ -93,7 +98,7 @@ jobs:
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: 整理固件文件
+    - name: Organize files
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && steps.compile.outputs.status == 'success'
       run: |
@@ -102,7 +107,7 @@ jobs:
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> $GITHUB_OUTPUT
 
-    - name: 上传固件产物
+    - name: Upload Artifact
       uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
@@ -110,7 +115,7 @@ jobs:
         path: ${{ env.FIRMWARE }}/*
         retention-days: 3
 
-    - name: 准备发布信息
+    - name: Generate release tag
       id: release
       if: env.UPLOAD_RELEASE == 'true'
       run: |
@@ -124,7 +129,7 @@ jobs:
         时间: $(date +"%Y-%m-%d %H:%M")
         EOF
 
-    - name: 创建发布版本
+    - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
       if: steps.organize.outputs.status == 'success' && !cancelled()
       env:
@@ -134,7 +139,7 @@ jobs:
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
 
-    - name: 清理旧工作流
+    - name: Delete workflow runs
       if: always()
       uses: LeeHe-gif/delete-workflow-runs@main
       with:

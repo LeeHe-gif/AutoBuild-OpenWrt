@@ -30,6 +30,11 @@ jobs:
     - name: Checkout
       uses: actions/checkout@v3  
 
+    - name: Show hardware info
+      run: |
+        chmod 755 ./scripts/show_hardware_info.sh
+        ./scripts/show_hardware_info.sh
+
     - name: Free disk space
       uses: jlumbroso/free-disk-space@main
       with:
@@ -80,7 +85,7 @@ jobs:
           ls -R
           exit 1
         fi
-        chmod +x ./imm-customize.sh && ./imm-customize.sh
+        chmod +x ./scripts/imm-customize.sh && ./scripts/imm-customize.sh
         [[ -d "files" ]] && mv -f files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
         cd openwrt && make defconfig

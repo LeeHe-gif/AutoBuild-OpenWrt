@@ -27,26 +27,31 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 检出代码
+    - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 1
 
-    - name: 清理磁盘空间
+    - name: Show hardware info
+      run: |
+        chmod 755 ./scripts/show_hardware_info.sh
+        ./scripts/show_hardware_info.sh
+        
+    - name: Free disk space
       uses: jlumbroso/free-disk-space@main
       with:
         tool-cache: false
         android: true
         dotnet: true
 
-    - name: 初始化环境
+    - name: Initialization environment
       run: |
         sudo -E apt-get -y update
         sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/LeeHe-gif/depend_ubuntu2204_openwrt/main/depend_ubuntu2204_openwrt)
         sudo timedatectl set-timezone "${TZ}"
         echo "status=success" >> ${GITHUB_OUTPUT}
 
-    - name: 克隆源码
+    - name: Clone source code
       id: clone
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
@@ -63,14 +68,14 @@ jobs:
         echo "HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
         echo "DATE=$(date +"%Y%m%d")" >> $GITHUB_ENV
 
-    - name: 配置缓存目录
+    - name: setup dl dir
       run: |
         sudo mkdir -p -m 777 /mnt/openwrt/{dl,staging_dir,build_dir}
         ln -sfn /mnt/openwrt/dl openwrt/dl
         ln -sfn /mnt/openwrt/staging_dir openwrt/staging_dir
         ln -sfn /mnt/openwrt/build_dir openwrt/build_dir
 
-    - name: 缓存工具链
+    - name: setup toolchain cache
       uses: actions/cache@v3
       id: toolchain-cache
       with:
@@ -83,13 +88,13 @@ jobs:
           ${{ runner.os }}-toolchain-${{ env.HASH }}-
           ${{ runner.os }}-toolchain-
 
-    - name: 刷新缓存时间戳
+    - name: Refresh Cache Timestamp
       if: steps.toolchain-cache.outputs.cache-hit == 'true'
       run: |
         find openwrt/staging_dir -type f -name ".stamp_*" -exec touch {} +
         find openwrt/build_dir -type f -name ".stamp_*" -exec touch {} +
 
-    - name: 更新安装 feeds
+    - name: Update & Install feeds
       working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
@@ -97,20 +102,20 @@ jobs:
         cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
         ./scripts/feeds install -a -f
 
-    - name: 自定义配置
+    - name: Configuration Customization
       run: |
-        chmod +x ./customize.sh && ./customize.sh
+        chmod +x ./scripts/customize.sh && ./scripts/customize.sh
         [[ -d "files" ]] && cp -r files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
         cd openwrt && make defconfig
         
-    - name: 下载软件包
+    - name: Download package
       run: |
         cd openwrt/
         make download -j$(nproc) || { echo "::error::下载失败"; exit 1; }
         find dl -size -1024c -delete
 
-    - name: 编译固件
+    - name: Compile the OpenWrt
       id : compile
       run: |
         cd openwrt/
@@ -124,7 +129,7 @@ jobs:
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
         echo "status=success" >> ${GITHUB_OUTPUT}
 
-    - name: 整理固件文件
+    - name: Organize files
       id: organize
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
       run: |
@@ -133,14 +138,14 @@ jobs:
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "status=success" >> ${GITHUB_OUTPUT}
 
-    - name: 上传固件文件
+    - name: Upload Artifact
       uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
         name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: ${{ env.FIRMWARE }}/*
 
-    - name: 准备发布信息
+    - name: Generate release tag
       id : release
       if : steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true'
       run: |
@@ -154,7 +159,7 @@ jobs:
         特性: 包含OpenClash等常用插件
         EOF
 
-    - name: 创建发布版本
+    - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
       if: steps.organize.outputs.status == 'success' && !cancelled()
       env:
@@ -164,7 +169,7 @@ jobs:
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
 
-    - name: 清理旧工作流
+    - name: Delete workflow runs
       if: always()
       uses: LeeHe-gif/delete-workflow-runs@main
       with:
