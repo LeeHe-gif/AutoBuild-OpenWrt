@@ -62,9 +62,9 @@ jobs:
       if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
         if [[ "${{ inputs.repo }}" == "lede" ]]; then
-            REPO_URL = "https://github.com/coolsnowwolf/lede"
-            REPO_BRANCH = "master"
-            CONFIG_FILE = "config/Xunlong_OrangePi_R1_Plus.config"
+            REPO_URL="https://github.com/coolsnowwolf/lede"
+            REPO_BRANCH="master"
+            CONFIG_FILE="config/Xunlong_OrangePi_R1_Plus.config"
             git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
             git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
             cd openwrt
@@ -73,9 +73,9 @@ jobs:
             echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
             echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
         else
-            REPO_URL = "https://github.com/openwrt/openwrt"
-            REPO_BRANCH  "openwrt-23.05"
-            CONFIG_FILE = "config/Xunlong_OrangePi_R1_Plus_1.config"
+            REPO_URL="https://github.com/openwrt/openwrt"
+            REPO_BRANCH="openwrt-23.05"
+            CONFIG_FILE="config/Xunlong_OrangePi_R1_Plus_1.config"
             git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
             cd openwrt
             echo 'src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages' >> feeds.conf.default
