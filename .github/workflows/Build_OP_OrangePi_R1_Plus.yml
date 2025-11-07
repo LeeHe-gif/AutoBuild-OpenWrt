@@ -17,7 +17,7 @@ on:
         description: "chose the repo"
         required: false
         default: "lede"
-        type: boolean
+        type: choice
         options:
           - openwrt
           - lede
