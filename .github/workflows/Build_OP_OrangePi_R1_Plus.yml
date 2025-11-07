@@ -109,7 +109,7 @@ jobs:
       run: |
         if [[ "${{ inputs.repo }}" == "lede" ]]; then
           cp config/Xunlong_OrangePi_R1_Plus.config openwrt/.config
-       else
+        else
           cp config/Xunlong_OrangePi_R1_Plus_1.config openwrt/.config
         fi
         # cd openwrt && make defconfig
