@@ -73,7 +73,6 @@ jobs:
             cd openwrt
             echo 'src-git openclash https://github.com/vernesong/OpenClash' >> feeds.conf.default
             git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
-            sed -i '49d' target/linux/rockchip/patches-5.15/008-v6.4-arm64-dts-rockchip-Add-Xunlong-OrangePi-R1-Plus-LTS.patch
         fi
         echo "status=success" >> ${GITHUB_OUTPUT}
 
