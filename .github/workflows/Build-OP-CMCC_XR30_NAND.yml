@@ -137,7 +137,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 LEDE 固件编译结果
+        🚀 OpenWrt firmware for CMCC_XR30
         ----------------------
         设备: CMCC_XR30
         时间: $(date +"%Y-%m-%d %H:%M")
