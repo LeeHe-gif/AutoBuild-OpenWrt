@@ -125,7 +125,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 JDC ER1 固件
+        🚀 OpenWrt firmware for JDC_ER1
         ------------------
         源码: $REPO_URL
         分支: $REPO_BRANCH

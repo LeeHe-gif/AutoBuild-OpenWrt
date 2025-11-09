@@ -151,12 +151,12 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 OpenWrt X86 固件
+        🚀 OpenWrt firmware for X86
         ------------------
         源码: $REPO_URL
         分支: $REPO_BRANCH
         时间: $(date +"%Y-%m-%d %H:%M")
-        特性: 包含OpenClash等常用插件
+        特性: 包含OpenClash，qmodem，istore等常用插件
         EOF
 
     - name: Upload firmware to release

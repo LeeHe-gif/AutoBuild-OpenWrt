@@ -168,7 +168,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 LEDE 固件编译结果
+        🚀 OpenWrt firmware for MangoPi_M28C
         ----------------------
         设备: MangoPi_M28C
         时间: $(date +"%Y-%m-%d %H:%M")

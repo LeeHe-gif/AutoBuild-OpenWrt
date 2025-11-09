@@ -129,12 +129,12 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 CUDY TR3000 U-Boot V1 固件
+        🚀 OpenWrt firmware for CUDY_TR3000(V1)
         ------------------------
         源码: $REPO_URL
         分支: $REPO_BRANCH
         时间: $(date +"%Y-%m-%d %H:%M")
-        特性: 包含docker,openclash,qmodem等插件
+        特性: 包含openclash,qmodem等插件
         EOF
 
     - name: Upload firmware to release

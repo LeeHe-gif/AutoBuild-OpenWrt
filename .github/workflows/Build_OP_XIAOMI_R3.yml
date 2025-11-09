@@ -121,12 +121,11 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 小米 R3 固件
+        🚀 OpenWrt firmware for XIAOMI_R3
         --------------
         源码: $REPO_URL
         分支: $REPO_BRANCH
         时间: $(date +"%Y-%m-%d %H:%M")
-        特性: 包含Nikki特色插件
         EOF
 
     - name: Upload firmware to release

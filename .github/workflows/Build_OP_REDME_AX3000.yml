@@ -121,7 +121,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 红米 AX3000 固件
+        🚀 OpenWrt firmware for REDME_AX3000
         ------------------
         源码: $REPO_URL
         分支: $REPO_BRANCH

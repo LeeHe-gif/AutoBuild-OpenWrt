@@ -146,7 +146,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 Phicomm K2G 固件
+        🚀 OpenWrt firmware for Phicomm K2G
         ------------------
         源码: ${{ inputs.source_branch == 'lede-master' && 'coolsnowwolf/lede' || 'immortalwrt/immortalwrt' }}
         分支: $REPO_BRANCH

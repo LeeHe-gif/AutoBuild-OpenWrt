@@ -134,7 +134,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 OpenWrt 固件编译结果
+        🚀 OpenWrt firmware for Arcadyan_AW1000
         ----------------------
         设备: Arcadyan_AW1000
         时间: $(date +"%Y-%m-%d %H:%M")
