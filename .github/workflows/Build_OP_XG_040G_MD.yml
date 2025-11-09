@@ -1,4 +1,4 @@
-name: Build_XG-040G-MD
+name: Build_XG_040G_MD
 
 on: 
   repository_dispatch:
@@ -15,8 +15,8 @@ on:
 
 env:
   CONFIG_FILE: 'config/XG_040G_MD.config'
-  REPO_URL: https://github.com/immortalwrt/immortalwrt
-  REPO_BRANCH: openwrt-24.10
+  REPO_URL: https://github.com/coolsnowwolf/lede
+  REPO_BRANCH: master
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
   TZ: Asia/Shanghai
@@ -37,7 +37,7 @@ jobs:
     - name: Free disk space
       uses: jlumbroso/free-disk-space@main
       with:
-        tool-cache: false
+        tool-cache: true
         android: true
         dotnet: true
 
@@ -60,8 +60,9 @@ jobs:
       if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
-        cd openwrt
-        echo 'src-git modem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
+        git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
+        # cd openwrt
+        # echo 'src-git modem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
         echo "status=success" >> ${GITHUB_OUTPUT}
         
     - name: Free up disk space
@@ -77,11 +78,13 @@ jobs:
       working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
+        rm -rf feeds/luci/applications/luci-app-openclash
+        cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
         ./scripts/feeds install -a -f
 
     - name: Configuration Customization
       run: |
-        chmod +x ./scripts/imm-customize.sh && ./scripts/imm-customize.sh
+        chmod +x ./scripts/customize.sh && ./scripts/customize.sh
         [[ -d "files" ]] && mv -f files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
         
@@ -127,7 +130,7 @@ jobs:
       run: |
         echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
-        🚀 IMMORTALWRT 固件编译结果
+        🚀 OpenWrt 固件编译结果
         ----------------------
         设备: XG-040G-MD
         时间: $(date +"%Y-%m-%d %H:%M")
