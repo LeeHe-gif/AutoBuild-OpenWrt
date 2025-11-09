@@ -57,4 +57,4 @@ I18N: [English](README_EN.md) | [简体中文](README.md)
   - XIAOMI_AX3000T
   - XIAOMI_R3
   - XIAOMI_R3G
-  - XG-040G-MD（测试）
+  - XG-040G-MD
