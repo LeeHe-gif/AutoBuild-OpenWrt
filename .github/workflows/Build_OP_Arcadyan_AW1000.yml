@@ -59,8 +59,8 @@ jobs:
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
         cd openwrt
+        sed -i 's/^#src-git qmodem/src-git qmodem/' feeds.conf.default
         cat <<EOF >> feeds.conf.default
-        src-git modem https://github.com/FUjr/QModem.git;main
         src-git istore https://github.com/linkease/istore;main
         src-git nas https://github.com/linkease/nas-packages.git;master
         src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main
