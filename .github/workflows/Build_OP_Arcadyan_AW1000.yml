@@ -57,6 +57,7 @@ jobs:
       if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
         cd openwrt
         cat <<EOF >> feeds.conf.default
         src-git modem https://github.com/FUjr/QModem.git;main
@@ -77,7 +78,9 @@ jobs:
       working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
-        ./scripts/feeds install -a
+        rm -rf feeds/luci/applications/luci-app-openclash
+        cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
+        ./scripts/feeds install -a -f
         
     - name: Configuration Customization - Build_Arcadyan_AW1000
       run: |
@@ -140,6 +143,7 @@ jobs:
         时间: $(date +"%Y-%m-%d %H:%M")
         源码: $REPO_URL
         分支: $REPO_BRANCH
+        内核: 6.12.X
         EOF
 
     - name: Upload firmware to release
