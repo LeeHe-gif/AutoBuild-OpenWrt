@@ -34,7 +34,7 @@ I18N: [English](README_EN.md) | [简体中文](README.md)
 
   - 构建完成后，会自动按照时间发布release，在[release](https://github.com/LeeHe-gif/AutoBuild-OpenWrt/releases)中下载固件。
 
-  - 默认Web管理IP:`192.168.1.1`，用户名`root`，没有登陆密码。
+  - 默认Web管理IP:`192.168.1.1`，用户名`root`，没有登陆密码或者password。
 
   - 插件默认有[OpenClash](https://github.com/vernesong/OpenClash)、[Openlist](https://github.com/OpenListTeam/OpenList),[istore](https://github.com/linkease/istore)带usb接口的装[Qmodem](https://github.com/FUjr/QModem),M28C等带usb接口的软路由加MT7921u的usb3.0的wifi6网卡驱动。
   - **3. 工作流已适配设备列表**
