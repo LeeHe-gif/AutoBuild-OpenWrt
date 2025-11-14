@@ -98,6 +98,7 @@ jobs:
       id: compile
       run: |
         cd openwrt/
+        make defconfig
         if [[ "${{ inputs.log_switch }}" == "true" ]]; then
             make -j1 V=s
         else
