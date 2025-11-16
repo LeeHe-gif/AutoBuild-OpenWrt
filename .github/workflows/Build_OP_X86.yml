@@ -68,7 +68,7 @@ jobs:
         echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
         echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
         echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
-        echo "src-git fancontrol https://github.com/LeeHe-gif/luci-app-fancontrol.git" >> "feeds.conf.default"
+        # echo "src-git fancontrol https://github.com/LeeHe-gif/luci-app-fancontrol.git" >> "feeds.conf.default"
         git clone https://github.com/LeeHe-gif/luci-app-webpanel.git package/webpanel/luci-app-webpanel
         git clone https://github.com/tty228/luci-app-wechatpush.git package/wechatpush/luci-app-wechatpush
         sed -i 's/^#src-git qmodem/src-git qmodem/' feeds.conf.default
