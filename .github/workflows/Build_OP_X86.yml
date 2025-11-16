@@ -26,11 +26,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    outputs:
+      startTime: ${{ steps.set-start-time.outputs.startTime }}
+
     steps:
     - name: Checkout
       uses: actions/checkout@v3
       with:
         fetch-depth: 1
+
+    - name: Set start time
+      id: set-start-time
+      run: echo "startTime=$(date +%s)" >> $GITHUB_OUTPUT
 
     - name: Show hardware info
       run: |
@@ -40,15 +47,15 @@ jobs:
     - name: Free disk space
       uses: jlumbroso/free-disk-space@main
       with:
-        tool-cache: false
+        tool-cache: true
         android: true
         dotnet: true
 
     - name: Initialization environment
       run: |
+        sudo timedatectl set-timezone "$TZ"
         sudo -E apt-get -y update
         sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/LeeHe-gif/depend_ubuntu2204_openwrt/main/depend_ubuntu2204_openwrt)
-        sudo timedatectl set-timezone "${TZ}"
         echo "status=success" >> ${GITHUB_OUTPUT}
 
     - name: Clone source code
@@ -65,8 +72,6 @@ jobs:
         git clone https://github.com/LeeHe-gif/luci-app-webpanel.git package/webpanel/luci-app-webpanel
         git clone https://github.com/tty228/luci-app-wechatpush.git package/wechatpush/luci-app-wechatpush
         sed -i 's/^#src-git qmodem/src-git qmodem/' feeds.conf.default
-        echo "HASH=$(git log -1 --pretty=format:'%h')" >> $GITHUB_ENV
-        echo "DATE=$(date +"%Y%m%d")" >> $GITHUB_ENV
 
     - name: setup dl dir
       run: |
@@ -74,25 +79,6 @@ jobs:
         ln -sfn /mnt/openwrt/dl openwrt/dl
         ln -sfn /mnt/openwrt/staging_dir openwrt/staging_dir
         ln -sfn /mnt/openwrt/build_dir openwrt/build_dir
-
-    - name: setup toolchain cache
-      uses: actions/cache@v3
-      id: toolchain-cache
-      with:
-        path: |
-          openwrt/staging_dir
-          openwrt/build_dir
-          openwrt/.ccache
-        key: ${{ runner.os }}-toolchain-${{ env.HASH }}-${{ env.DATE }}
-        restore-keys: |
-          ${{ runner.os }}-toolchain-${{ env.HASH }}-
-          ${{ runner.os }}-toolchain-
-
-    - name: Refresh Cache Timestamp
-      if: steps.toolchain-cache.outputs.cache-hit == 'true'
-      run: |
-        find openwrt/staging_dir -type f -name ".stamp_*" -exec touch {} +
-        find openwrt/build_dir -type f -name ".stamp_*" -exec touch {} +
 
     - name: Update & Install feeds
       working-directory: ./openwrt
@@ -168,6 +154,50 @@ jobs:
         tag_name: ${{ steps.release.outputs.release_tag }}
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
+
+    - name: Pushplus Notification
+      if: always()
+      run: |
+        START_TIME=${{ fromJSON(needs.build.outputs.startTime) }}
+        END_TIME=$(date +%s)
+        DURATION=$((END_TIME - START_TIME))
+        DURATION_STR=$(printf "%02d:%02d:%02d" $((DURATION/3600)) $((DURATION%3600/60)) $((DURATION%60)))
+        
+        if [[ "${{ job.status }}" == "success" ]]; then
+          STATUS="✅ 编译成功"
+          COLOR="#00ff00"
+        elif [[ "${{ job.status }}" == "cancelled" ]]; then
+          STATUS="⚠️ 编译取消"
+          COLOR="#ffff00"
+        else
+          STATUS="❌ 编译失败"
+          COLOR="#ff0000"
+        fi
+        
+        DEVICE_NAME=$(cat openwrt/DEVICE_NAME 2>/dev/null || echo "未知设备")
+        
+        CONTENT="# OpenWrt 编译通知 \n\n
+        ## **${STATUS}** \n\n
+        ### 📋 编译信息 \n
+        - **设备类型**: ${DEVICE_NAME} \n
+        - **开始时间**: $(date -d @$START_TIME +"%Y-%m-%d %H:%M:%S") \n
+        - **结束时间**: $(date +"%Y-%m-%d %H:%M:%S") \n
+        - **编译耗时**: ${DURATION_STR} \n\n
+        ### 📦 固件信息 \n
+        - **源码仓库**: $REPO_URL \n
+        - **源码分支**: $REPO_BRANCH \n
+        ### 🔗 相关链接 \n
+        - [工作流运行](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) \n
+        - [源码仓库]($REPO_URL)"
+        
+        curl --location --request POST 'https://www.pushplus.plus/send' \
+        --header 'Content-Type: application/json' \
+        --data-raw "{
+            \"token\":\"${{ secrets.PUSH_PLUS_TOKEN }}\",
+            \"title\":\"OpenWrt 编译 ${STATUS}\",
+            \"content\":\"${CONTENT}\",
+            \"template\":\"markdown\"
+        }"
 
     - name: Delete workflow runs
       if: always()
