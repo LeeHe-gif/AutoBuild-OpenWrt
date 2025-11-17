@@ -35,9 +35,9 @@ jobs:
       with:
         fetch-depth: 1
 
-    - name: Set start time
-      id: set-start-time
-      run: echo "startTime=$(date +%s)" >> $GITHUB_OUTPUT
+    - name: Record start time
+      id: start-time
+      run: echo "start-time=$(date +%s)" >> $GITHUB_OUTPUT
 
     - name: Show hardware info
       run: |
@@ -158,45 +158,37 @@ jobs:
     - name: Pushplus Notification
       if: always()
       run: |
-        START_TIME=${{ fromJSON(needs.build.outputs.startTime) }}
+        START_TIME=${{ steps.start-time.outputs.start-time }}
         END_TIME=$(date +%s)
         DURATION=$((END_TIME - START_TIME))
-        DURATION_STR=$(printf "%02d:%02d:%02d" $((DURATION/3600)) $((DURATION%3600/60)) $((DURATION%60)))
-        
+        DURATION_STR=$(printf "%02d小时%02d分钟%02d秒" $((DURATION/3600)) $((DURATION%3600/60)) $((DURATION%60)))
+    
         if [[ "${{ job.status }}" == "success" ]]; then
           STATUS="✅ 编译成功"
-          COLOR="#00ff00"
+          EMOJI="🎉"
         elif [[ "${{ job.status }}" == "cancelled" ]]; then
           STATUS="⚠️ 编译取消"
-          COLOR="#ffff00"
+          EMOJI="⏹️"
         else
           STATUS="❌ 编译失败"
-          COLOR="#ff0000"
+          EMOJI="💥"
         fi
-        
-        DEVICE_NAME=$(cat openwrt/DEVICE_NAME 2>/dev/null || echo "未知设备")
-        
-        CONTENT="# OpenWrt 编译通知 \n\n
-        ## **${STATUS}** \n\n
-        ### 📋 编译信息 \n
-        - **设备类型**: ${DEVICE_NAME} \n
-        - **开始时间**: $(date -d @$START_TIME +"%Y-%m-%d %H:%M:%S") \n
-        - **结束时间**: $(date +"%Y-%m-%d %H:%M:%S") \n
-        - **编译耗时**: ${DURATION_STR} \n\n
-        ### 📦 固件信息 \n
-        - **源码仓库**: $REPO_URL \n
-        - **源码分支**: $REPO_BRANCH \n
-        ### 🔗 相关链接 \n
-        - [工作流运行](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) \n
-        - [源码仓库]($REPO_URL)"
-        
+    
+        if [[ -f "openwrt/DEVICE_NAME" ]]; then
+          DEVICE_NAME=$(cat openwrt/DEVICE_NAME)
+        else
+          DEVICE_NAME="X86_64设备"
+        fi
+    
+        CONTENT="# ${EMOJI} OpenWrt 编译通知\n\n## ${STATUS}\n\n### 📋 编译信息\n- **设备类型**: ${DEVICE_NAME}\n- **开始时间**: $(date -d "@${START_TIME}" +"%Y-%m-%d %H:%M:%S")\n- **结束时间**: $(date +"%Y-%m-%d %H:%M:%S")\n- **编译耗时**: ${DURATION_STR}\n\n### 📦 源码信息\n- **源码仓库**: $REPO_URL\n- **源码分支**: $REPO_BRANCH\n\n### 🔗 相关链接\n- [工作流运行](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\n- [源码仓库]($REPO_URL)"
+    
         curl --location --request POST 'https://www.pushplus.plus/send' \
         --header 'Content-Type: application/json' \
         --data-raw "{
-            \"token\":\"${{ secrets.PUSH_PLUS_TOKEN }}\",
-            \"title\":\"OpenWrt 编译 ${STATUS}\",
-            \"content\":\"${CONTENT}\",
-            \"template\":\"markdown\"
+        \"token\": \"${{ secrets.PUSH_PLUS_TOKEN }}\",
+        \"title\": \"OpenWrt编译${STATUS}\",
+        \"content\": \"$CONTENT\",
+        \"template\": \"markdown\"
         }"
 
     - name: Delete workflow runs
