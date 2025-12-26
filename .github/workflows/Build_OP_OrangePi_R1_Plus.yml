@@ -13,14 +13,6 @@ on:
           - true
           - false
 
-      repo:
-        description: "chose the repo"
-        required: false
-        default: "lede"
-        type: choice
-        options:
-          - openwrt
-          - lede
 env:
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
@@ -61,28 +53,16 @@ jobs:
       id: clone
       if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
-        if [[ "${{ inputs.repo }}" == "lede" ]]; then
-            REPO_URL="https://github.com/coolsnowwolf/lede"
-            REPO_BRANCH="master"
-            git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
-            git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
-            cd openwrt
-            echo 'src-git Qmodem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
-            echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
-            echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
-            echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
-        else
-            REPO_URL="https://github.com/openwrt/openwrt"
-            REPO_BRANCH="openwrt-23.05"
-            CONFIG_FILE="config/Xunlong_OrangePi_R1_Plus_1.config"
-            git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
-            cd openwrt
-            echo 'src-git passwall_packages https://github.com/xiaorouji/openwrt-passwall-packages' >> feeds.conf.default
-            echo 'src-git passwall_luci https://github.com/xiaorouji/openwrt-passwall' >> feeds.conf.default
-            echo 'src-git openclash https://github.com/vernesong/OpenClash' >> feeds.conf.default
-            git clone https://github.com/jerrykuku/luci-theme-argon.git package/luci-theme-argon
-            # sed -i '49d' target/linux/rockchip/patches-5.15/008-v6.4-arm64-dts-rockchip-Add-Xunlong-OrangePi-R1-Plus-LTS.patch
-        fi
+        REPO_URL="https://github.com/coolsnowwolf/lede"
+        REPO_BRANCH="master"
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
+        cd openwrt
+        sed -i 's/^#src-git helloworld/src-git helloworld/' feeds.conf.default
+        sed -i 's/^#src-git qmodem/src-git qmodem/' feeds.conf.default
+        echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
+        echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
+        echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
         echo "status=success" >> ${GITHUB_OUTPUT}
 
     - name: Setup disk space
@@ -107,11 +87,7 @@ jobs:
 
     - name: Configuration Customization
       run: |
-        if [[ "${{ inputs.repo }}" == "lede" ]]; then
-          cp config/Xunlong_OrangePi_R1_Plus.config openwrt/.config
-        else
-          cp config/Xunlong_OrangePi_R1_Plus_1.config openwrt/.config
-        fi
+        cp config/Xunlong_OrangePi_R1_Plus.config openwrt/.config
         # cd openwrt && make defconfig
         
     - name: Download packages
