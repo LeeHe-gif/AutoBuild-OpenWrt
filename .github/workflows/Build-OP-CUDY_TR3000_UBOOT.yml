@@ -60,11 +60,6 @@ jobs:
         git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
         cd openwrt
         echo 'src-git Qmodem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
-        echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
-        echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
-        echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
-        echo "src-git nikki https://github.com/nikkinikki-org/OpenWrt-nikki.git;main" >> "feeds.conf.default"
-        echo "src-git fancontrol https://github.com/rockjake/luci-app-fancontrol.git" >> "feeds.conf.default"
         
     - name: Free up disk space
       run: |
@@ -129,7 +124,7 @@ jobs:
       id : release
       if : steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true'
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        echo "release_tag=CUDY_TR3000_UBOOT")" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
         🚀 OpenWrt firmware for CUDY_TR3000(UBOOT)
         ------------------------
