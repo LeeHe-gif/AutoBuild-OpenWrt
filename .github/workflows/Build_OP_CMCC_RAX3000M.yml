@@ -154,7 +154,7 @@ jobs:
       id : release
       if: steps.organize.outputs.status == 'success' 
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        echo "release_tag=CMCC_RAX3000M" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
         🚀 OpenWrt firmware for CMCC_RAX3000M
         ----------------------

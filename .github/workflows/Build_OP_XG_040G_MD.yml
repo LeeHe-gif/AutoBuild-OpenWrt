@@ -129,7 +129,7 @@ jobs:
       id: tag
       if: env.UPLOAD_RELEASE == 'true' && steps.organize.outputs.status == 'success'
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        echo "release_tag=XG-040G-MD" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
         🚀 OpenWrt firmware for XG_040G_MD
         ----------------------

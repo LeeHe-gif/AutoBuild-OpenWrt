@@ -124,7 +124,7 @@ jobs:
       id: release
       if: env.UPLOAD_RELEASE == 'true' && steps.organize.outputs.status == 'success'
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        echo "release_tag=Netcore_N60PRO" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
         🚀 OpenWrt Firmware for Netcore N60PRO
         ------------------------------------

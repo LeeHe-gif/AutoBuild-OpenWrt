@@ -123,7 +123,7 @@ jobs:
       id : release
       if : steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true'
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        echo "release_tag=GeHua_GHL-R-001" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
         🚀 OpenWrt firmware for GeHua_GHL-R-001
         ------------------

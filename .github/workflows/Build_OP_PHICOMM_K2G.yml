@@ -144,7 +144,7 @@ jobs:
       id: release
       if: env.UPLOAD_RELEASE == 'true' && steps.compile.outputs.status == 'success'
       run: |
-        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
+        echo "release_tag=phicomm_k2g" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
         🚀 OpenWrt firmware for Phicomm K2G
         ------------------
