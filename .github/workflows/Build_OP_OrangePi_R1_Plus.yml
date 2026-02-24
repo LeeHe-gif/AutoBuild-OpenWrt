@@ -64,8 +64,7 @@ jobs:
         df -h
         
     - name: Update feeds
-      working-directory: ./openwrt    
-      if: steps.clone.outputs.status == 'success'
+      working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
         rm -rf feeds/luci/applications/luci-app-openclash
