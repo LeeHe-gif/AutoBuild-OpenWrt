@@ -50,27 +50,24 @@ jobs:
         dotnet: true
 
     - name: Initialization environment
-      id: init
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo -E apt-get -y update
         sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/LeeHe-gif/depend_ubuntu2204_openwrt/main/depend_ubuntu2204_openwrt)
         sudo timedatectl set-timezone "${TZ}"
-        echo "status=success" >> ${GITHUB_OUTPUT}
         
     - name: Clone source code
-      id: codes
-      if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
         cd openwrt
-        echo 'src-git 5GModemSupport https://github.com/Siriling/5G-Modem-Support.git' >> feeds.conf.default
+        sed -i 's/^#src-git helloworld/src-git helloworld/' feeds.conf.default
         echo 'src-git istore https://github.com/linkease/istore;main' >> feeds.conf.default
         echo 'src-git nas https://github.com/linkease/nas-packages.git;master' >> feeds.conf.default
         echo 'src-git nas_luci https://github.com/linkease/nas-packages-luci.git;main' >> feeds.conf.default
-        echo "status=success" >> ${GITHUB_OUTPUT}
+        # git clone https://github.com/LeeHe-gif/luci-app-webpanel.git package/webpanel/luci-app-webpanel
+        sed -i 's/^#src-git qmodem/src-git qmodem/' feeds.conf.default
 
     - name: Free up disk space
       run: |
@@ -157,7 +154,7 @@ jobs:
       id : release
       if: steps.organize.outputs.status == 'success' 
       run: |
-        echo "release_tag=CMCC_RAX3000M" >> $GITHUB_OUTPUT
+        echo "release_tag=CMCC_RAX3000M_${{ inputs.device_config }}" >> $GITHUB_OUTPUT
         cat <<EOF > release.txt
         🚀 OpenWrt firmware for CMCC_RAX3000M
         ----------------------
