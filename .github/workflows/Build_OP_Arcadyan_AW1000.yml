@@ -7,11 +7,7 @@ on:
       log_switch:
         description: "Compile log switch"
         required: false
-        default: "false"
         type: boolean
-        options:
-          - true
-          - false
   
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
@@ -101,7 +97,7 @@ jobs:
       id: compile
       run: |
         cd openwrt/
-        if [[ "${{ inputs.log_switch }}" == "yes" ]]; then
+        if [[ "${{ inputs.log_switch }}" == "true" ]]; then
             make -j1 V=s
         else
             make -j$(nproc)
