@@ -7,15 +7,11 @@ on:
       log_switch:
         description: "Compile log switch"
         required: false
-        default: "false"
         type: boolean
-        options:
-          - true
-          - false
 
 env:
-  REPO_URL="https://github.com/coolsnowwolf/lede"
-  REPO_BRANCH="master"
+  REPO_URL: https://github.com/coolsnowwolf/lede
+  REPO_BRANCH: master
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
@@ -42,7 +38,6 @@ jobs:
         ./scripts/show_hardware_info.sh
 
     - name: Initialize environment
-      id: init
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -53,7 +48,6 @@ jobs:
         
     - name: Clone source code
       id: clone
-      if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
