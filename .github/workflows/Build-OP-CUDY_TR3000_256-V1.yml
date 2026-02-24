@@ -58,6 +58,9 @@ jobs:
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
+        cd openwrt
+        sed -i 's/^#src-git helloworld/src-git helloworld/' feeds.conf.default
+        sed -i 's/^#src-git qmodem/src-git qmodem/' feeds.conf.default
         
     - name: Free up disk space
       run: |
