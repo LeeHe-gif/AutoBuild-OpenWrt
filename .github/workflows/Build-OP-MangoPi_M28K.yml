@@ -93,11 +93,13 @@ jobs:
         chmod +x ./scripts/customize.sh && ./scripts/customize.sh
         [[ -d "files" ]] && mv -f files openwrt/files
         cp -fv "${CONFIG_FILE}" openwrt/.config
+        cd openwrt
+        make defconfig
         
     - name: Download package
       working-directory: ./openwrt
       run: |
-        make download -j$(nproc) || { echo "Download failed"; exit 1; }
+        make download -j1 || { echo "Download failed"; exit 1; }
         find dl -size -1024c -delete
  
     - name: Compile the OpenWrt

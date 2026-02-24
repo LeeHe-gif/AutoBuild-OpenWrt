@@ -57,8 +57,7 @@ jobs:
       if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
-        cd openwrt
-        echo 'src-git modem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
+        git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
 
     - name: Setup disk space
       run: |
@@ -72,9 +71,9 @@ jobs:
       working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
-        sed -i 's/PKG_VERSION:=0.46.033/PKG_VERSION:=0.46.079/' feeds/luci/applications/luci-app-openclash/Makefile
+        rm -rf feeds/luci/applications/luci-app-openclash
+        cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
         ./scripts/feeds install -a
-        ./scripts/feeds install -a -f -p modem
 
     - name: Configuration Customization
       run: |
@@ -90,7 +89,7 @@ jobs:
     - name: Download packages
       working-directory: ./openwrt
       run: |
-        make download -j$(nproc) || { echo "❌ Download failed"; exit 1; }
+        make download -j1 || { echo "❌ Download failed"; exit 1; }
         find dl -size -1024c -delete
 
     - name: Compile firmware

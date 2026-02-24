@@ -108,7 +108,7 @@ jobs:
     - name: Download packages
       working-directory: ./openwrt
       run: |
-        make download -j$(nproc) || { echo "❌ Download failed"; exit 1; }
+        make download -j1 || { echo "❌ Download failed"; exit 1; }
         find dl -size -1024c -delete
 
     - name: Compile firmware

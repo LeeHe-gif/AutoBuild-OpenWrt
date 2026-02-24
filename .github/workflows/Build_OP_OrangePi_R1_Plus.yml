@@ -14,6 +14,8 @@ on:
           - false
 
 env:
+  REPO_URL="https://github.com/coolsnowwolf/lede"
+  REPO_BRANCH="master"
   UPLOAD_BIN_DIR: true
   UPLOAD_FIRMWARE: true
   UPLOAD_RELEASE: true
@@ -53,8 +55,6 @@ jobs:
       id: clone
       if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
-        REPO_URL="https://github.com/coolsnowwolf/lede"
-        REPO_BRANCH="master"
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
         git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
         cd openwrt
@@ -79,21 +79,19 @@ jobs:
       if: steps.clone.outputs.status == 'success'
       run: |
         ./scripts/feeds update -a
-        if [[ "${{ inputs.repo }}" == "lede" ]]; then
-            rm -rf feeds/luci/applications/luci-app-openclash
-            cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
-        fi
+        rm -rf feeds/luci/applications/luci-app-openclash
+        cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
         ./scripts/feeds install -a
 
     - name: Configuration Customization
       run: |
         cp config/Xunlong_OrangePi_R1_Plus.config openwrt/.config
-        # cd openwrt && make defconfig
+        cd openwrt && make defconfig
         
     - name: Download packages
       working-directory: ./openwrt
       run: |
-        make download -j$(nproc) || { echo "❌ Download failed"; exit 1; }
+        make download -j1 || { echo "❌ Download failed"; exit 1; }
         find dl -size -1024c -delete
 
     - name: Compile firmware

@@ -57,6 +57,7 @@ jobs:
       if: ${{ steps.init.outputs.status }} == 'success' && !cancelled()
       run: |
         git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
         cd openwrt
         echo 'src-git modem https://github.com/FUjr/QModem.git;main' >> feeds.conf.default
 
@@ -72,9 +73,9 @@ jobs:
       working-directory: ./openwrt
       run: |
         ./scripts/feeds update -a
-        sed -i 's/PKG_VERSION:=0.46.033/PKG_VERSION:=0.46.079/' feeds/luci/applications/luci-app-openclash/Makefile
+        rm -rf feeds/luci/applications/luci-app-openclash
+        cp -r ../OpenClash/luci-app-openclash feeds/luci/applications/
         ./scripts/feeds install -a
-        ./scripts/feeds install -a -f -p modem
 
     - name: Configuration Customization - Build_QIHOO_360_T7
       run: |
@@ -94,7 +95,7 @@ jobs:
       id: package
       run: |
         cd openwrt/
-        make download -j$(nproc) || { echo "❌ 下载失败"; exit 1; }
+        make download -j1 || { echo "❌ 下载失败"; exit 1; }
         find dl -size -1024c -delete
         echo "status=success" >> ${GITHUB_OUTPUT}
  
