@@ -73,7 +73,7 @@ jobs:
 
     - name: Configuration Customization
       run: |
-        cp config/Friendlyarm_Nanopi-R3S.config
+        cp config/Friendlyarm_Nanopi-R3S.config openwrt/.config
         cd openwrt && make defconfig
         
     - name: Download packages
