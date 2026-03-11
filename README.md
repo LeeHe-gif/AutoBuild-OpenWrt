@@ -1,4 +1,5 @@
 # 自动编译lede的OpenWrt
+# ❗❗❗ 编译前请更新设备config，否则大概率失败
 [![LICENSE](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat&logo=github&label=LICENSE)](https://github.com/LeeHe-gif/AutoBuild-OpenWrt/blob/master/LICENSE)
 ![GitHub Stars](https://img.shields.io/github/stars/LeeHe-gif/AutoBuild-OpenWrt.svg?style=flat&logo=appveyor&label=Stars&logo=github)
 ![GitHub Forks](https://img.shields.io/github/forks/LeeHe-gif/AutoBuild-OpenWrt.svg?style=flat&logo=appveyor&label=Forks&logo=github)
@@ -42,10 +43,13 @@ I18N: [English](README_EN.md) | [简体中文](README.md)
   - CMCC_RAX3000M(nand/emmc)
   - CMCC_XR30(nand)
   - CUDY_TR3000
+  - Friendlyarm_Nanopi-R3S
   - GeHua_GHL-R-001
   - HILINK_H29K
   - QIHOO_360_T7
   - JDC_AX1800PRO
+  - JDC_AX6600
+  - JDC_ER1
   - MangPi_M28C
   - MangPi_M28K
   - Netcore_N60PRO
