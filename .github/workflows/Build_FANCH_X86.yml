@@ -1,0 +1,156 @@
+name: Build_X86
+
+on:
+  repository_dispatch:
+  workflow_dispatch:
+    inputs:
+      log_switch:
+        description: "Compile log switch"
+        required: false
+        default: "false"
+        type: boolean
+        options:
+          - true
+          - false
+          
+env:
+  REPO_URL: https://github.com/fanchmwrt/fanchmwrt
+  CONFIG_FILE: "config/fanchmwrt_x86.config"
+  REPO_BRANCH: fanchmwrt-24.10.4
+  UPLOAD_BIN_DIR: true
+  UPLOAD_FIRMWARE: true
+  UPLOAD_RELEASE: true
+  TZ: Asia/Shanghai
+  
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    outputs:
+      startTime: ${{ steps.set-start-time.outputs.startTime }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 1
+
+    - name: Record start time
+      id: start-time
+      run: echo "start-time=$(date +%s)" >> $GITHUB_OUTPUT
+
+    - name: Show hardware info
+      run: |
+        chmod 755 ./scripts/show_hardware_info.sh
+        ./scripts/show_hardware_info.sh
+        
+    - name: Free disk space
+      uses: jlumbroso/free-disk-space@main
+      with:
+        tool-cache: true
+        android: true
+        dotnet: true
+
+    - name: Initialization environment
+      run: |
+        sudo timedatectl set-timezone "$TZ"
+        sudo -E apt-get -y update
+        sudo -E apt-get -y install $(curl -fsSL https://raw.githubusercontent.com/LeeHe-gif/depend_ubuntu2204_openwrt/main/depend_ubuntu2204_openwrt)
+        echo "status=success" >> ${GITHUB_OUTPUT}
+
+    - name: Clone source code
+      run: |
+        git clone --depth 1 $REPO_URL -b $REPO_BRANCH openwrt
+        cd openwrt/package/
+        git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
+        git clone https://github.com/jerrykuku/luci-theme-argon.git
+        git clone https://github.com/rufengsuixing/luci-app-adguardhome.git
+        cd ..
+        echo 'src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main' >> feeds.conf.default
+        echo 'src-git passwall_luci https://github.com/Openwrt-Passwall/openwrt-passwall.git;main' >> feeds.conf.default
+
+    - name: setup dl dir
+      run: |
+        sudo mkdir -p -m 777 /mnt/openwrt/{dl,staging_dir,build_dir}
+        ln -sfn /mnt/openwrt/dl openwrt/dl
+        ln -sfn /mnt/openwrt/staging_dir openwrt/staging_dir
+        ln -sfn /mnt/openwrt/build_dir openwrt/build_dir
+
+    - name: Update & Install feeds
+      working-directory: ./openwrt
+      run: |
+        ./scripts/feeds update -a
+        ./scripts/feeds install -a
+
+    - name: Configuration Customization
+      run: |
+        [[ -d "files" ]] && cp -r files openwrt/files
+        cp -fv "${CONFIG_FILE}" openwrt/.config
+        cd openwrt && make defconfig
+        
+    - name: Download package
+      run: |
+        cd openwrt/
+        make download -j1
+        find dl -size -1024c -delete
+
+    - name: Compile the OpenWrt
+      id : compile
+      run: |
+        cd openwrt/
+        if [[ "${{ inputs.log_switch }}" == "true" ]]; then
+            make -j1 V=s
+        else
+            make -j$(nproc)
+        fi
+        grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
+        [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
+        echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
+        echo "status=success" >> ${GITHUB_OUTPUT}
+
+    - name: Organize files
+      id: organize
+      if: steps.compile.outputs.status == 'success' && env.UPLOAD_FIRMWARE == 'true'
+      run: |
+        cd openwrt/bin/targets/*/* || { echo "::error::固件目录不存在"; exit 1; }
+        rm -rf packages
+        echo "FIRMWARE=$PWD" >> $GITHUB_ENV
+        echo "status=success" >> ${GITHUB_OUTPUT}
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@main
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      with:
+        name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
+        path: ${{ env.FIRMWARE }}/*
+
+    - name: Generate release tag
+      id : release
+      if : steps.organize.outputs.status == 'success' && env.UPLOAD_RELEASE == 'true'
+      run: |
+        echo "release_tag=fanchmwrt_x86" >> $GITHUB_OUTPUT
+        cat <<EOF > release.txt
+        🚀 Fanchmwrt firmware for X86
+        ------------------
+        源码: $REPO_URL
+        分支: $REPO_BRANCH
+        时间: $(date +"%Y-%m-%d %H:%M")
+        EOF
+
+    - name: Upload firmware to release
+      uses: softprops/action-gh-release@v1
+      if: steps.organize.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.release.outputs.release_tag }}
+        body_path: release.txt
+        files: ${{ env.FIRMWARE }}/*
+
+    - name: Delete workflow runs
+      if: always()
+      uses: LeeHe-gif/delete-workflow-runs@main
+      with:
+        retain_days: 1
+        keep_minimum_runs: 3
+        token: ${{ secrets.GITHUB_TOKEN }}
