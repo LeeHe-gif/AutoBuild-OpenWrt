@@ -65,9 +65,9 @@ jobs:
         git clone --depth 1 https://github.com/vernesong/OpenClash.git OpenClash
         git clone https://github.com/jerrykuku/luci-theme-argon.git
         git clone https://github.com/rufengsuixing/luci-app-adguardhome.git
-        cd ..
-        echo 'src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main' >> feeds.conf.default
-        echo 'src-git passwall_luci https://github.com/Openwrt-Passwall/openwrt-passwall.git;main' >> feeds.conf.default
+        # cd ..
+        # echo 'src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main' >> feeds.conf.default
+        # echo 'src-git passwall_luci https://github.com/Openwrt-Passwall/openwrt-passwall.git;main' >> feeds.conf.default
 
     - name: setup dl dir
       run: |
